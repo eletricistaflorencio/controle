@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finanças + Cartões</title>
+    <style>
+        /* ---------- RESET & BASE ---------- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f1f5f9;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 960px;
+            width: 100%;
+            background: white;
+            border-radius: 28px;
+            padding: 28px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.06);
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #0f172a;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ---------- ABAS ---------- */
+        .abas {
+            display: flex;
+            gap: 4px;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+        }
+
+        .aba {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            border-radius: 12px;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.95rem;
+            text-align: center;
+        }
+
+        .aba.ativa {
+            background: white;
+            color: #0f172a;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .aba:hover:not(.ativa) {
+            color: #0f172a;
+        }
+
+        .painel {
+            display: none;
+            animation: fade 0.25s ease;
+        }
+
+        .painel.ativo {
+            display: block;
+        }
+
+        @keyframes fade {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ---------- RESUMO ---------- */
+        .resumo {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            background: #f8fafc;
+            padding: 18px 20px;
+            border-radius: 18px;
+            margin-bottom: 24px;
+        }
+
+        .resumo-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .resumo-item .label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: #64748b;
+        }
+
+        .resumo-item .value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .value.positive {
+            color: #16a34a;
+        }
+        .value.negative {
+            color: #dc2626;
+        }
+        .value.neutral {
+            color: #0f172a;
+        }
+
+        /* ---------- FILTROS ---------- */
+        .filtros {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            background: #f8fafc;
+            padding: 12px 16px;
+            border-radius: 14px;
+            margin-bottom: 18px;
+        }
+
+        .filtros label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .filtros select,
+        .filtros input {
+            padding: 6px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            font-size: 0.9rem;
+        }
+
+        .filtros select:focus,
+        .filtros input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .btn-limpar {
+            background: none;
+            border: none;
+            color: #3b82f6;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.85rem;
+            padding: 4px 8px;
+        }
+
+        .btn-limpar:hover {
+            text-decoration: underline;
+        }
+
+        .btn-primary {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            background: #3b82f6;
+            color: white;
+            cursor: pointer;
+            transition: 0.15s;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #e2e8f0;
+            color: #475569;
+        }
+
+        .btn-outline:hover {
+            background: #f1f5f9;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        /* ---------- LISTA DE TRANSAÇÕES ---------- */
+        .lista-transacoes {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .transacao-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 12px 16px;
+            border-radius: 14px;
+            border-left: 5px solid #3b82f6;
+            transition: 0.15s;
+        }
+
+        .transacao-item.despesa {
+            border-left-color: #ef4444;
+        }
+
+        .transacao-item.receita {
+            border-left-color: #16a34a;
+        }
+
+        .transacao-info {
+            flex: 1;
+        }
+
+        .transacao-info .descricao {
+            font-weight: 500;
+            color: #0f172a;
+        }
+
+        .transacao-info .detalhes {
+            font-size: 0.8rem;
+            color: #64748b;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 16px;
+            margin-top: 2px;
+        }
+
+        .transacao-valor {
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin-right: 12px;
+        }
+
+        .transacao-valor.receita {
+            color: #16a34a;
+        }
+
+        .transacao-valor.despesa {
+            color: #dc2626;
+        }
+
+        .transacao-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-icone {
+            background: none;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #94a3b8;
+            font-size: 1rem;
+            transition: 0.15s;
+        }
+
+        .btn-icone:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+
+        .btn-icone.excluir:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .btn-icone.editar:hover {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .vazio {
+            text-align: center;
+            color: #94a3b8;
+            padding: 40px 0;
+            font-style: italic;
+        }
+
+        .total-transacoes {
+            text-align: right;
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 12px;
+        }
+
+        /* ---------- CARTÕES ---------- */
+        .cartao-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 18px;
+            transition: 0.15s;
+        }
+
+        .cartao-card:hover {
+            border-color: #cbd5e1;
+        }
+
+        .cartao-header {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .cartao-header .nome {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .cartao-header .acoes {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .cartao-resumo {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px 24px;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+        }
+
+        .cartao-resumo .gasto {
+            color: #dc2626;
+            font-weight: 600;
+        }
+
+        .cartao-resumo .disponivel {
+            color: #16a34a;
+            font-weight: 600;
+        }
+
+        .cartao-resumo .limite {
+            color: #475569;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 8px 0 14px;
+        }
+
+        .progress-bar .fill {
+            height: 100%;
+            border-radius: 10px;
+            background: #3b82f6;
+            transition: width 0.4s ease;
+        }
+
+        .fill.alto {
+            background: #ef4444;
+        }
+        .fill.medio {
+            background: #f59e0b;
+        }
+
+        .cartao-transacoes {
+            border-top: 1px solid #f1f5f9;
+            padding-top: 14px;
+        }
+
+        .cartao-transacoes .subtitulo {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 8px;
+        }
+
+        .cartao-transacoes .transacao-item {
+            border-left: none;
+            border: 1px solid #f1f5f9;
+            padding: 8px 12px;
+            margin-bottom: 4px;
+            background: #fafcff;
+        }
+
+        .cartao-transacoes .transacao-item .transacao-valor {
+            font-size: 0.95rem;
+        }
+
+        /* ---------- MODAIS ---------- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-overlay.ativo {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 24px;
+            max-width: 480px;
+            width: 100%;
+            padding: 28px 32px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: fade 0.2s ease;
+        }
+
+        .modal h2 {
+            font-size: 1.4rem;
+            margin-bottom: 18px;
+            color: #0f172a;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .form-group label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #64748b;
+            letter-spacing: 0.3px;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 10px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            background: #f8fafc;
+            transition: 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+            background: white;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .modal-actions .btn {
+            padding: 8px 24px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        /* ---------- TOAST ---------- */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 2000;
+        }
+
+        .toast {
+            background: #0f172a;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            animation: slideUp 0.3s ease;
+        }
+
+        .toast.sucesso {
+            background: #16a34a;
+        }
+        .toast.erro {
+            background: #dc2626;
+        }
+        .toast.info {
+            background: #3b82f6;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ---------- RESPONSIVO ---------- */
+        @media (max-width: 640px) {
+            .container {
+                padding: 16px;
+            }
+
+            .resumo {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .filtros {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filtros select,
+            .filtros input {
+                width: 100%;
+            }
+
+            .modal {
+                padding: 20px;
+            }
+
+            .transacao-item {
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+
+            .transacao-actions {
+                margin-left: auto;
+            }
+
+            .cartao-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .cartao-header .acoes {
+                justify-content: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>💰 Finanças</h1>
+
+        <!-- Abas -->
+        <div class="abas">
+            <button class="aba ativa" data-painel="transacoes">📋 Transações</button>
+            <button class="aba" data-painel="cartoes">💳 Cartões</button>
+        </div>
+
+        <!-- PAINEL TRANSAÇÕES -->
+        <div id="painel-transacoes" class="painel ativo">
+            <div class="resumo">
+                <div class="resumo-item">
+                    <span class="label">Saldo</span>
+                    <span class="value neutral" id="saldo">R$ 0,00</span>
+                </div>
+                <div class="resumo-item">
+                    <span class="label">Receitas</span>
+                    <span class="value positive" id="totalReceitas">R$ 0,00</span>
+                </div>
+                <div class="resumo-item">
+                    <span class="label">Despesas</span>
+                    <span class="value negative" id="totalDespesas">R$ 0,00</span>
+                </div>
+            </div>
+
+            <div class="filtros">
+                <label for="filtroTipo">Tipo</label>
+                <select id="filtroTipo">
+                    <option value="todas">Todas</option>
+                    <option value="receita">Receitas</option>
+                    <option value="despesa">Despesas</option>
+                </select>
+
+                <label for="filtroData">Data</label>
+                <input type="date" id="filtroData" />
+
+                <label for="filtroCartao">Cartão</label>
+                <select id="filtroCartao">
+                    <option value="">Todos</option>
+                </select>
+
+                <button class="btn-limpar" id="limparFiltros">Limpar</button>
+
+                <button class="btn-primary" id="abrirModalTransacao" style="margin-left:auto;">+ Nova</button>
+            </div>
+
+            <div class="lista-transacoes" id="listaTransacoes"></div>
+            <div class="total-transacoes" id="totalTransacoes">0 transações</div>
+        </div>
+
+        <!-- PAINEL CARTÕES -->
+        <div id="painel-cartoes" class="painel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
+                <h2 style="font-size:1.2rem;">💳 Meus Cartões</h2>
+                <button class="btn-primary" id="abrirModalCartao">+ Adicionar Cartão</button>
+            </div>
+            <div id="listaCartoes"></div>
+        </div>
+    </div>
+
+    <!-- MODAL TRANSAÇÃO -->
+    <div class="modal-overlay" id="modalTransacaoOverlay">
+        <div class="modal">
+            <h2 id="modalTransacaoTitulo">Nova Transação</h2>
+            <form id="formTransacao">
+                <div class="form-group">
+                    <label for="modalDescricao">Descrição</label>
+                    <input type="text" id="modalDescricao" placeholder="Ex: Supermercado" required>
+                </div>
+                <div class="form-group">
+                    <label for="modalValor">Valor (R$)</label>
+                    <input type="number" id="modalValor" step="0.01" min="0.01" placeholder="0,00" required>
+                </div>
+                <div class="form-group">
+                    <label for="modalData">Data</label>
+                    <input type="date" id="modalData" required>
+                </div>
+                <div class="form-group">
+                    <label for="modalTipo">Tipo</label>
+                    <select id="modalTipo">
+                        <option value="receita">Receita</option>
+                        <option value="despesa">Despesa</option>
+                    </select>
+                </div>
+                <div class="form-group" id="modalCampoCartao">
+                    <label for="modalCartao">Cartão (opcional)</label>
+                    <select id="modalCartao">
+                        <option value="">Nenhum</option>
+                    </select>
+                </div>
+                <input type="hidden" id="modalTransacaoId" value="">
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="fecharModalTransacao">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL CARTÃO -->
+    <div class="modal-overlay" id="modalCartaoOverlay">
+        <div class="modal">
+            <h2 id="modalCartaoTitulo">Adicionar Cartão</h2>
+            <form id="formCartao">
+                <div class="form-group">
+                    <label for="modalNomeCartao">Nome do cartão</label>
+                    <input type="text" id="modalNomeCartao" placeholder="Ex: Nubank" required>
+                </div>
+                <div class="form-group">
+                    <label for="modalLimiteCartao">Limite (R$)</label>
+                    <input type="number" id="modalLimiteCartao" step="0.01" min="0" placeholder="0,00" required>
+                </div>
+                <div class="form-group">
+                    <label for="modalDiaVencimento">Dia de vencimento (opcional)</label>
+                    <input type="number" id="modalDiaVencimento" min="1" max="31" placeholder="10">
+                </div>
+                <input type="hidden" id="modalCartaoId" value="">
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="fecharModalCartao">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL CONFIRMAÇÃO -->
+    <div class="modal-overlay" id="modalConfirmOverlay">
+        <div class="modal" style="max-width:400px;">
+            <h2 id="modalConfirmTitulo">Confirmar exclusão</h2>
+            <p id="modalConfirmMensagem" style="margin:12px 0 20px; color:#475569;">Tem certeza que deseja excluir este item?</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="fecharModalConfirm">Cancelar</button>
+                <button class="btn btn-danger" id="confirmarExclusao">Excluir</button>
+            </div>
+            <input type="hidden" id="modalConfirmId" value="">
+            <input type="hidden" id="modalConfirmTipo" value="">
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ----------------------------------------------------------------
+            // 1. ESTADO E PERSISTÊNCIA
+            // ----------------------------------------------------------------
+            let transacoes = [];
+            let cartoes = [];
+            const STORAGE_TRANS = 'financas_transacoes';
+            const STORAGE_CARTOES = 'financas_cartoes';
+
+            function carregarDados() {
+                try {
+                    const storedTrans = localStorage.getItem(STORAGE_TRANS);
+                    transacoes = storedTrans ? JSON.parse(storedTrans) : [];
+                    const storedCart = localStorage.getItem(STORAGE_CARTOES);
+                    cartoes = storedCart ? JSON.parse(storedCart) : [];
+                } catch (e) {
+                    transacoes = [];
+                    cartoes = [];
+                }
+
+                // Se não houver dados, criar exemplos
+                if (transacoes.length === 0 && cartoes.length === 0) {
+                    const hoje = new Date().toISOString().split('T')[0];
+                    transacoes = [
+                        { id: Date.now() - 100000, descricao: 'Salário', valor: 3500, data: hoje, tipo: 'receita',
+                            cartaoId: null },
+                        { id: Date.now() - 200000, descricao: 'Aluguel', valor: 1200, data: hoje, tipo: 'despesa',
+                            cartaoId: null },
+                        { id: Date.now() - 300000, descricao: 'Supermercado', valor: 450, data: hoje, tipo: 'despesa',
+                            cartaoId: null },
+                    ];
+                    cartoes = [
+                        { id: Date.now() - 500000, nome: 'Nubank', limite: 5000, diaVencimento: 10 },
+                        { id: Date.now() - 600000, nome: 'Itaú', limite: 3000, diaVencimento: 15 },
+                    ];
+                    salvarTransacoes();
+                    salvarCartoes();
+                }
+            }
+
+            function salvarTransacoes() {
+                localStorage.setItem(STORAGE_TRANS, JSON.stringify(transacoes));
+            }
+
+            function salvarCartoes() {
+                localStorage.setItem(STORAGE_CARTOES, JSON.stringify(cartoes));
+            }
+
+            // ----------------------------------------------------------------
+            // 2. UTILITÁRIOS
+            // ----------------------------------------------------------------
+            function gerarId() {
+                return Date.now() + Math.random() * 1000;
+            }
+
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            function formatarData(dataStr) {
+                const partes = dataStr.split('-');
+                return `${partes[2]}/${partes[1]}/${partes[0]}`;
+            }
+
+            function mostrarToast(mensagem, tipo = 'info') {
+                const container = document.getElementById('toastContainer');
+                const toast = document.createElement('div');
+                toast.className = `toast ${tipo}`;
+                toast.textContent = mensagem;
+                container.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transition = 'opacity 0.3s';
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+
+            // ----------------------------------------------------------------
+            // 3. ATUALIZAÇÃO DOS SELECTS (cartões)
+            // ----------------------------------------------------------------
+            function atualizarSelects() {
+                const modalCartao = document.getElementById('modalCartao');
+                const filtroCartao = document.getElementById('filtroCartao');
+
+                // Guardar valores selecionados atuais
+                const valModal = modalCartao.value;
+                const valFiltro = filtroCartao.value;
+
+                // Limpar e preencher select do modal
+                modalCartao.innerHTML = '<option value="">Nenhum</option>';
+                cartoes.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.nome;
+                    modalCartao.appendChild(opt);
+                });
+                if (valModal) modalCartao.value = valModal;
+
+                // Limpar e preencher select do filtro
+                filtroCartao.innerHTML = '<option value="">Todos</option>';
+                cartoes.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.nome;
+                    filtroCartao.appendChild(opt);
+                });
+                if (valFiltro) filtroCartao.value = valFiltro;
+
+                // Mostrar/esconder campo cartão no modal conforme tipo
+                toggleCampoCartao();
+            }
+
+            function toggleCampoCartao() {
+                const tipo = document.getElementById('modalTipo').value;
+                const campo = document.getElementById('modalCampoCartao');
+                campo.style.display = (tipo === 'despesa') ? 'flex' : 'none';
+            }
+
+            // ----------------------------------------------------------------
+            // 4. RENDERIZAÇÃO DA LISTA DE TRANSAÇÕES
+            // ----------------------------------------------------------------
+            function getTransacoesFiltradas() {
+                const tipo = document.getElementById('filtroTipo').value;
+                const data = document.getElementById('filtroData').value;
+                const cartaoId = document.getElementById('filtroCartao').value;
+                return transacoes.filter(t => {
+                    if (tipo !== 'todas' && t.tipo !== tipo) return false;
+                    if (data && t.data !== data) return false;
+                    if (cartaoId && t.cartaoId !== parseFloat(cartaoId)) return false;
+                    return true;
+                });
+            }
+
+            function renderizarTransacoes() {
+                const lista = getTransacoesFiltradas();
+                const container = document.getElementById('listaTransacoes');
+                const totalEl = document.getElementById('totalTransacoes');
+
+                if (lista.length === 0) {
+                    container.innerHTML = '<div class="vazio">Nenhuma transação encontrada.</div>';
+                    totalEl.textContent = '0 transações';
+                    return;
+                }
+
+                const ordenadas = [...lista].sort((a, b) => {
+                    if (a.data !== b.data) return b.data.localeCompare(a.data);
+                    return b.id - a.id;
+                });
+
+                let html = '';
+                ordenadas.forEach(t => {
+                    const tipoClass = t.tipo === 'despesa' ? 'despesa' : 'receita';
+                    const sinal = t.tipo === 'despesa' ? '-' : '+';
+                    const valorFormatado = t.valor.toFixed(2).replace('.', ',');
+                    let cartaoNome = '';
+                    if (t.cartaoId) {
+                        const cartao = cartoes.find(c => c.id === t.cartaoId);
+                        if (cartao) cartaoNome = `💳 ${cartao.nome}`;
+                    }
+                    html += `
+                        <div class="transacao-item ${tipoClass}" data-id="${t.id}">
+                            <div class="transacao-info">
+                                <div class="descricao">${escapeHtml(t.descricao)}</div>
+                                <div class="detalhes">
+                                    <span>${formatarData(t.data)}</span>
+                                    <span>${t.tipo === 'receita' ? '💰 Receita' : '💸 Despesa'}</span>
+                                    ${cartaoNome ? `<span>${cartaoNome}</span>` : ''}
+                                </div>
+                            </div>
+                            <div class="transacao-valor ${tipoClass}">${sinal} R$ ${valorFormatado}</div>
+                            <div class="transacao-actions">
+                                <button class="btn-icone editar" data-id="${t.id}" title="Editar">✏️</button>
+                                <button class="btn-icone excluir" data-id="${t.id}" title="Excluir">🗑️</button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+                totalEl.textContent = `${ordenadas.length} transação${ordenadas.length > 1 ? 'es' : ''}`;
+            }
+
+            // ----------------------------------------------------------------
+            // 5. RESUMO (saldo, receitas, despesas)
+            // ----------------------------------------------------------------
+            function atualizarResumo() {
+                const lista = getTransacoesFiltradas();
+                let receitas = 0,
+                    despesas = 0;
+                lista.forEach(t => {
+                    if (t.tipo === 'receita') receitas += t.valor;
+                    else despesas += t.valor;
+                });
+                const saldo = receitas - despesas;
+
+                document.getElementById('saldo').textContent = `R$ ${saldo.toFixed(2).replace('.', ',')}`;
+                document.getElementById('saldo').className = 'value ' + (saldo > 0 ? 'positive' : saldo < 0 ? 'negative' :
+                    'neutral');
+                document.getElementById('totalReceitas').textContent = `R$ ${receitas.toFixed(2).replace('.', ',')}`;
+                document.getElementById('totalDespesas').textContent = `R$ ${despesas.toFixed(2).replace('.', ',')}`;
+            }
+
+            function aplicarFiltros() {
+                renderizarTransacoes();
+                atualizarResumo();
+            }
+
+            // ----------------------------------------------------------------
+            // 6. CARTÕES - RENDERIZAÇÃO
+            // ----------------------------------------------------------------
+            function calcularGastosCartao(cartaoId) {
+                return transacoes
+                    .filter(t => t.tipo === 'despesa' && t.cartaoId === cartaoId)
+                    .reduce((acc, t) => acc + t.valor, 0);
+            }
+
+            function getTransacoesPorCartao(cartaoId) {
+                return transacoes
+                    .filter(t => t.tipo === 'despesa' && t.cartaoId === cartaoId)
+                    .sort((a, b) => b.data.localeCompare(a.data) || b.id - a.id);
+            }
+
+            function renderizarCartoes() {
+                const container = document.getElementById('listaCartoes');
+                if (cartoes.length === 0) {
+                    container.innerHTML = '<div class="vazio">Nenhum cartão cadastrado.</div>';
+                    return;
+                }
+
+                let html = '';
+                cartoes.forEach(c => {
+                    const gasto = calcularGastosCartao(c.id);
+                    const disponivel = c.limite - gasto;
+                    const percentual = c.limite > 0 ? Math.min((gasto / c.limite) * 100, 100) : 0;
+                    const classeBarra = percentual > 85 ? 'alto' : percentual > 60 ? 'medio' : '';
+                    const transacoesCartao = getTransacoesPorCartao(c.id);
+
+                    html += `
+                        <div class="cartao-card" data-id="${c.id}">
+                            <div class="cartao-header">
+                                <span class="nome">${escapeHtml(c.nome)}</span>
+                                <div class="acoes">
+                                    <button class="btn-primary btn-outline btn-nova-despesa" data-cartao-id="${c.id}">➕ Nova despesa</button>
+                                    <button class="btn-icone editar" data-id="${c.id}" title="Editar cartão">✏️</button>
+                                    <button class="btn-icone excluir" data-id="${c.id}" title="Excluir cartão">🗑️</button>
+                                </div>
+                            </div>
+                            <div class="cartao-resumo">
+                                <span class="limite">💳 Limite: R$ ${c.limite.toFixed(2).replace('.', ',')}</span>
+                                <span class="gasto">📉 Gasto: R$ ${gasto.toFixed(2).replace('.', ',')}</span>
+                                <span class="disponivel">✅ Disponível: R$ ${disponivel.toFixed(2).replace('.', ',')}</span>
+                                ${c.diaVencimento ? `<span>📅 Vencimento: dia ${c.diaVencimento}</span>` : ''}
+                            </div>
+                            <div class="progress-bar">
+                                <div class="fill ${classeBarra}" style="width:${percentual}%;"></div>
+                            </div>
+                            <div class="cartao-transacoes">
+                                <div class="subtitulo">Últimas despesas</div>
+                                ${transacoesCartao.length === 0 ? '<div style="color:#94a3b8; font-size:0.9rem;">Nenhuma despesa registrada.</div>' : ''}
+                                ${transacoesCartao.slice(0, 5).map(t => `
+                                    <div class="transacao-item despesa" data-id="${t.id}">
+                                        <div class="transacao-info">
+                                            <div class="descricao">${escapeHtml(t.descricao)}</div>
+                                            <div class="detalhes">${formatarData(t.data)}</div>
+                                        </div>
+                                        <div class="transacao-valor despesa">- R$ ${t.valor.toFixed(2).replace('.', ',')}</div>
+                                        <button class="btn-icone excluir" data-id="${t.id}" title="Excluir">🗑️</button>
+                                    </div>
+                                `).join('')}
+                                ${transacoesCartao.length > 5 ? `<div style="text-align:right; font-size:0.8rem; color:#64748b; margin-top:4px;">+ ${transacoesCartao.length - 5} outras...</div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+
+                // Event listeners para botões "Nova despesa" dentro dos cartões
+                container.querySelectorAll('.btn-nova-despesa').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const cartaoId = parseFloat(this.dataset.cartaoId);
+                        abrirModalTransacaoComCartao(cartaoId);
+                    });
+                });
+            }
+
+            // ----------------------------------------------------------------
+            // 7. MODAIS - ABRIR/FECHAR
+            // ----------------------------------------------------------------
+            function abrirModalTransacao(transacao = null) {
+                const overlay = document.getElementById('modalTransacaoOverlay');
+                const titulo = document.getElementById('modalTransacaoTitulo');
+                const idInput = document.getElementById('modalTransacaoId');
+                const desc = document.getElementById('modalDescricao');
+                const valor = document.getElementById('modalValor');
+                const data = document.getElementById('modalData');
+                const tipo = document.getElementById('modalTipo');
+                const cartao = document.getElementById('modalCartao');
+
+                idInput.value = '';
+                if (transacao) {
+                    titulo.textContent = 'Editar Transação';
+                    desc.value = transacao.descricao;
+                    valor.value = transacao.valor;
+                    data.value = transacao.data;
+                    tipo.value = transacao.tipo;
+                    cartao.value = transacao.cartaoId || '';
+                    idInput.value = transacao.id;
+                } else {
+                    titulo.textContent = 'Nova Transação';
+                    desc.value = '';
+                    valor.value = '';
+                    data.value = new Date().toISOString().split('T')[0];
+                    tipo.value = 'receita';
+                    cartao.value = '';
+                }
+                toggleCampoCartao();
+                overlay.classList.add('ativo');
+                desc.focus();
+            }
+
+            function fecharModalTransacao() {
+                document.getElementById('modalTransacaoOverlay').classList.remove('ativo');
+            }
+
+            function abrirModalTransacaoComCartao(cartaoId) {
+                // Mudar para aba transações
+                document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
+                document.querySelector('[data-painel="transacoes"]').classList.add('ativa');
+                document.getElementById('painel-transacoes').classList.add('ativo');
+                document.getElementById('painel-cartoes').classList.remove('ativo');
+
+                // Abrir modal com tipo despesa e cartão pré-selecionado
+                abrirModalTransacao();
+                document.getElementById('modalTipo').value = 'despesa';
+                toggleCampoCartao();
+                // Aguardar atualização do select
+                setTimeout(() => {
+                    document.getElementById('modalCartao').value = cartaoId;
+                }, 50);
+            }
+
+            function abrirModalCartao(cartao = null) {
+                const overlay = document.getElementById('modalCartaoOverlay');
+                const titulo = document.getElementById('modalCartaoTitulo');
+                const idInput = document.getElementById('modalCartaoId');
+                const nome = document.getElementById('modalNomeCartao');
+                const limite = document.getElementById('modalLimiteCartao');
+                const dia = document.getElementById('modalDiaVencimento');
+
+                idInput.value = '';
+                if (cartao) {
+                    titulo.textContent = 'Editar Cartão';
+                    nome.value = cartao.nome;
+                    limite.value = cartao.limite;
+                    dia.value = cartao.diaVencimento || '';
+                    idInput.value = cartao.id;
+                } else {
+                    titulo.textContent = 'Adicionar Cartão';
+                    nome.value = '';
+                    limite.value = '';
+                    dia.value = '';
+                }
+                overlay.classList.add('ativo');
+                nome.focus();
+            }
+
+            function fecharModalCartao() {
+                document.getElementById('modalCartaoOverlay').classList.remove('ativo');
+            }
+
+            function abrirModalConfirm(tipo, id, mensagem) {
+                document.getElementById('modalConfirmTipo').value = tipo;
+                document.getElementById('modalConfirmId').value = id;
+                document.getElementById('modalConfirmMensagem').textContent = mensagem || 'Tem certeza que deseja excluir este item?';
+                document.getElementById('modalConfirmOverlay').classList.add('ativo');
+            }
+
+            function fecharModalConfirm() {
+                document.getElementById('modalConfirmOverlay').classList.remove('ativo');
+                document.getElementById('modalConfirmId').value = '';
+                document.getElementById('modalConfirmTipo').value = '';
+            }
+
+            // ----------------------------------------------------------------
+            // 8. SALVAR TRANSAÇÃO (CRIAR/EDITAR)
+            // ----------------------------------------------------------------
+            function salvarTransacaoHandler(event) {
+                event.preventDefault();
+
+                const id = document.getElementById('modalTransacaoId').value;
+                const descricao = document.getElementById('modalDescricao').value.trim();
+                const valor = parseFloat(document.getElementById('modalValor').value);
+                const data = document.getElementById('modalData').value;
+                const tipo = document.getElementById('modalTipo').value;
+                const cartaoId = document.getElementById('modalCartao').value ? parseFloat(document.getElementById('modalCartao')
+                    .value) : null;
+
+                if (!descricao || !valor || !data) {
+                    mostrarToast('Preencha todos os campos.', 'erro');
+                    return;
+                }
+                if (valor <= 0) {
+                    mostrarToast('Valor deve ser maior que zero.', 'erro');
+                    return;
+                }
+                if (tipo === 'despesa' && cartaoId) {
+                    const cartao = cartoes.find(c => c.id === cartaoId);
+                    if (!cartao) {
+                        mostrarToast('Cartão selecionado não existe.', 'erro');
+                        return;
+                    }
+                }
+
+                if (id) {
+                    // Editar
+                    const index = transacoes.findIndex(t => t.id === parseFloat(id));
+                    if (index === -1) {
+                        mostrarToast('Transação não encontrada.', 'erro');
+                        return;
+                    }
+                    transacoes[index] = {
+                        ...transacoes[index],
+                        descricao,
+                        valor,
+                        data,
+                        tipo,
+                        cartaoId: tipo === 'despesa' ? cartaoId : null
+                    };
+                    mostrarToast('Transação atualizada!', 'sucesso');
+                } else {
+                    // Nova
+                    const nova = {
+                        id: gerarId(),
+                        descricao,
+                        valor,
+                        data,
+                        tipo,
+                        cartaoId: tipo === 'despesa' ? cartaoId : null,
+                    };
+                    transacoes.push(nova);
+                    mostrarToast('Transação adicionada!', 'sucesso');
+                }
+
+                salvarTransacoes();
+                aplicarFiltros();
+                renderizarCartoes();
+                fecharModalTransacao();
+            }
+
+            // ----------------------------------------------------------------
+            // 9. SALVAR CARTÃO (CRIAR/EDITAR)
+            // ----------------------------------------------------------------
+            function salvarCartaoHandler(event) {
+                event.preventDefault();
+
+                const id = document.getElementById('modalCartaoId').value;
+                const nome = document.getElementById('modalNomeCartao').value.trim();
+                const limite = parseFloat(document.getElementById('modalLimiteCartao').value);
+                const diaVencimento = document.getElementById('modalDiaVencimento').value ? parseInt(document.getElementById(
+                    'modalDiaVencimento').value) : null;
+
+                if (!nome || !limite || limite <= 0) {
+                    mostrarToast('Preencha nome e limite válido.', 'erro');
+                    return;
+                }
+                if (diaVencimento && (diaVencimento < 1 || diaVencimento > 31)) {
+                    mostrarToast('Dia de vencimento deve ser entre 1 e 31.', 'erro');
+                    return;
+                }
+
+                if (id) {
+                    const index = cartoes.findIndex(c => c.id === parseFloat(id));
+                    if (index === -1) {
+                        mostrarToast('Cartão não encontrado.', 'erro');
+                        return;
+                    }
+                    cartoes[index] = { ...cartoes[index], nome, limite, diaVencimento };
+                    mostrarToast('Cartão atualizado!', 'sucesso');
+                } else {
+                    const novo = {
+                        id: gerarId(),
+                        nome,
+                        limite,
+                        diaVencimento,
+                    };
+                    cartoes.push(novo);
+                    mostrarToast('Cartão adicionado!', 'sucesso');
+                }
+
+                salvarCartoes();
+                atualizarSelects();
+                renderizarCartoes();
+                fecharModalCartao();
+            }
+
+            // ----------------------------------------------------------------
+            // 10. CONFIRMAR EXCLUSÃO
+            // ----------------------------------------------------------------
+            function confirmarExclusaoHandler() {
+                const tipo = document.getElementById('modalConfirmTipo').value;
+                const id = parseFloat(document.getElementById('modalConfirmId').value);
+                if (!id) return;
+
+                if (tipo === 'transacao') {
+                    transacoes = transacoes.filter(t => t.id !== id);
+                    salvarTransacoes();
+                    mostrarToast('Transação excluída.', 'info');
+                    aplicarFiltros();
+                    renderizarCartoes();
+                } else if (tipo === 'cartao') {
+                    // Remover associação nas transações
+                    transacoes.forEach(t => {
+                        if (t.cartaoId === id) t.cartaoId = null;
+                    });
+                    salvarTransacoes();
+                    cartoes = cartoes.filter(c => c.id !== id);
+                    salvarCartoes();
+                    mostrarToast('Cartão excluído.', 'info');
+                    atualizarSelects();
+                    renderizarCartoes();
+                    aplicarFiltros();
+                }
+                fecharModalConfirm();
+            }
+
+            // ----------------------------------------------------------------
+            // 11. DELEGAÇÃO DE EVENTOS (para editar/excluir em listas)
+            // ----------------------------------------------------------------
+            function setupDelegacao() {
+                // Cliques na lista de transações (editar/excluir)
+                document.getElementById('listaTransacoes').addEventListener('click', function(e) {
+                    const btn = e.target.closest('.btn-icone');
+                    if (!btn) return;
+                    const id = parseFloat(btn.dataset.id);
+                    if (!id) return;
+
+                    if (btn.classList.contains('editar')) {
+                        const transacao = transacoes.find(t => t.id === id);
+                        if (transacao) abrirModalTransacao(transacao);
+                    } else if (btn.classList.contains('excluir')) {
+                        abrirModalConfirm('transacao', id, 'Deseja excluir esta transação?');
+                    }
+                });
+
+                // Cliques na lista de cartões (editar/excluir cartão, excluir transação dentro do cartão)
+                document.getElementById('listaCartoes').addEventListener('click', function(e) {
+                    const btn = e.target.closest('.btn-icone');
+                    if (!btn) return;
+                    const id = parseFloat(btn.dataset.id);
+                    if (!id) return;
+
+                    if (btn.classList.contains('editar')) {
+                        const cartao = cartoes.find(c => c.id === id);
+                        if (cartao) abrirModalCartao(cartao);
+                    } else if (btn.classList.contains('excluir')) {
+                        // Verificar se é um cartão ou uma transação
+                        const isCartao = cartoes.some(c => c.id === id);
+                        if (isCartao) {
+                            abrirModalConfirm('cartao', id, 'Deseja excluir este cartão? As transações associadas permanecerão sem cartão.');
+                        } else {
+                            abrirModalConfirm('transacao', id, 'Deseja excluir esta despesa?');
+                        }
+                    }
+                });
+            }
+
+            // ----------------------------------------------------------------
+            // 12. INICIALIZAÇÃO
+            // ----------------------------------------------------------------
+            function init() {
+                carregarDados();
+                atualizarSelects();
+                aplicarFiltros();
+                renderizarCartoes();
+                setupDelegacao();
+
+                // --- Event listeners ---
+
+                // Abas
+                document.querySelectorAll('.aba').forEach(aba => {
+                    aba.addEventListener('click', function() {
+                        const target = this.dataset.painel;
+                        document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
+                        this.classList.add('ativa');
+                        document.querySelectorAll('.painel').forEach(p => p.classList.remove('ativo'));
+                        document.getElementById(`painel-${target}`).classList.add('ativo');
+                        if (target === 'cartoes') renderizarCartoes();
+                    });
+                });
+
+                // Filtros
+                document.getElementById('filtroTipo').addEventListener('change', aplicarFiltros);
+                document.getElementById('filtroData').addEventListener('change', aplicarFiltros);
+                document.getElementById('filtroCartao').addEventListener('change', aplicarFiltros);
+                document.getElementById('limparFiltros').addEventListener('click', function() {
+                    document.getElementById('filtroTipo').value = 'todas';
+                    document.getElementById('filtroData').value = '';
+                    document.getElementById('filtroCartao').value = '';
+                    aplicarFiltros();
+                });
+
+                // Modais - Transação
+                document.getElementById('abrirModalTransacao').addEventListener('click', () => abrirModalTransacao());
+                document.getElementById('fecharModalTransacao').addEventListener('click', fecharModalTransacao);
+                document.getElementById('modalTransacaoOverlay').addEventListener('click', function(e) {
+                    if (e.target === this) fecharModalTransacao();
+                });
+                document.getElementById('formTransacao').addEventListener('submit', salvarTransacaoHandler);
+                document.getElementById('modalTipo').addEventListener('change', toggleCampoCartao);
+
+                // Modais - Cartão
+                document.getElementById('abrirModalCartao').addEventListener('click', () => abrirModalCartao());
+                document.getElementById('fecharModalCartao').addEventListener('click', fecharModalCartao);
+                document.getElementById('modalCartaoOverlay').addEventListener('click', function(e) {
+                    if (e.target === this) fecharModalCartao();
+                });
+                document.getElementById('formCartao').addEventListener('submit', salvarCartaoHandler);
+
+                // Modal Confirm
+                document.getElementById('fecharModalConfirm').addEventListener('click', fecharModalConfirm);
+                document.getElementById('modalConfirmOverlay').addEventListener('click', function(e) {
+                    if (e.target === this) fecharModalConfirm();
+                });
+                document.getElementById('confirmarExclusao').addEventListener('click', confirmarExclusaoHandler);
+
+                // Fechar modais com ESC
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        if (document.getElementById('modalTransacaoOverlay').classList.contains('ativo'))
+                            fecharModalTransacao();
+                        else if (document.getElementById('modalCartaoOverlay').classList.contains('ativo'))
+                            fecharModalCartao();
+                        else if (document.getElementById('modalConfirmOverlay').classList.contains('ativo'))
+                            fecharModalConfirm();
+                    }
+                });
+
+                console.log('Sistema iniciado com sucesso!');
+            }
+
+            // Iniciar após DOM pronto
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+        })();
+    </script>
+
+</body>
+</html>
